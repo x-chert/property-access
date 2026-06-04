@@ -1,0 +1,23 @@
+{
+	"name": "xchert/property-access",
+	"keywords": [
+		"properties",
+		"data",
+		"access"
+	],
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Dustin Simon"
+		}
+	],
+	"autoload": {
+		"psr-4": {
+			"Xchert\\PropertyAccess\\": "src/"
+		}
+	},
+	"require": {
+		"php": "^8.3",
+		"xchert/util": "v1.0.0-RC1"
+	}
+}
