@@ -38,7 +38,7 @@ class ObjectAccessor extends Accessor
             return null;
         }
 
-        if($property->hasType() && !$property->isInitialized()) {
+        if($property->hasType() && !$property->isInitialized($data)) {
             return null;
         }
 
