@@ -1,16 +1,16 @@
 {
 	"name": "xchert/property-access",
+	"type": "library",
 	"keywords": [
 		"properties",
 		"data",
-		"access"
+		"access",
+		"generic"
 	],
 	"license": "MIT",
-	"authors": [
-		{
-			"name": "Dustin Simon"
-		}
-	],
+	"authors": [{
+		"name": "Dustin Simon"
+	}],
 	"autoload": {
 		"psr-4": {
 			"Xchert\\PropertyAccess\\": "src/"
@@ -18,6 +18,6 @@
 	},
 	"require": {
 		"php": "^8.3",
-		"xchert/util": "v1.0.0-RC1"
+		"xchert/util": "~1.0"
 	}
 }
