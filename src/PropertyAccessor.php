@@ -232,7 +232,11 @@ class PropertyAccessor
 
             $resultPath = $context->getPath()->merge($path);
             try {
-                $result[(string) $resultPath] = $this->getValue($path, $data, $subContext);
+                $value = $this->getValue($path, $data, $subContext);
+
+                if($value !== null) {
+                    $result[(string) $resultPath] = $value;
+                }
             } catch(NotAccessableException|PropertyNotFoundException $e) {
                 if($context->hasFlags(Flags::STRICT)) {
                     throw $e;
@@ -266,6 +270,14 @@ class PropertyAccessor
             } catch(NotAccessableException $e) {
                 if($context->hasFlags(Flags::STRICT)) {
                     throw $e;
+                }
+
+                return [];
+            }
+
+            if(!\is_iterable($pointer)) {
+                if($context->hasFlags(Flags::STRICT) && $pointer !== null) {
+                    throw new NotAccessableException($currentPath->copy(), \get_debug_type($pointer), Operation::Collect);
                 }
 
                 return [];

@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+1.0.0-RC4
+---
+
+* [Bugfix] Property accessor should not accommodate null values in collect operation
+
 1.0.0-RC3
 ---
 
