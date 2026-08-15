@@ -386,6 +386,10 @@ class PropertyAccessor
 
             $this->access($field, $currentValue, $currentElement['value'], $context->subContext(Operation::Set, $this->createPathFromReverse($context->getPath(), new Path($currentPath))));
 
+            if (\is_object($currentValue)) {
+                return;
+            }
+
             $currentPath[] = $field;
             $currentElement = [
                 'field' => $record['field'],
