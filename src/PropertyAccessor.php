@@ -323,7 +323,7 @@ class PropertyAccessor
             $path = $context->getPath()->copy();
             $path->pop();
 
-            throw new NotAccessableException($path, \get_debug_type($data), $context->getOperation());
+            throw new NotAccessibleException($path, \get_debug_type($data), $context->getOperation());
         }
 
         return $accessor->access($field, $data, $value, $context);
