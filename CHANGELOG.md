@@ -1,22 +1,23 @@
-CHANGELOG
-=========
+# v1.0.0-RC4
 
-1.0.0-RC4
----
+### Bugfixes
 
-* [Bugfix] Property accessor should not accommodate null values in collect operation
+* Property accessor should not accommodate null values in collect operation
 
-1.0.0-RC3
----
+# v1.0.0-RC3
 
-* Allow release candidates for internal packages
+### Devops
 
-1.0.0-RC2
----
+* Allow release candidates for internal packagesheck
 
-* [Bugfix] Add missing object to property initialization check
+# v1.0.0-RC2
 
-1.0.0-RC1
----
+### Bugfixes
+
+* Add missing object to property initialization check
+
+# v1.0.0-RC1
+
+### Other
 
 * Init package
