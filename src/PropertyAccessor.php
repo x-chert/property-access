@@ -178,12 +178,16 @@ class PropertyAccessor
         $pointer = $data;
         $currentPath = [];
 
-        foreach($path as $field) {
+        foreach ($path as $index => $field) {
             $currentPath[] = $field;
 
             $pointer = $this->access($field, $pointer, null, $context->subContext(Operation::Get, new Path($currentPath)));
 
-            if($pointer === null) {
+            if ($pointer === null) {
+                if (($index < ($path->getLength() - 1)) && $context->hasFlags(Flags::STRICT)) {
+                    throw new NotAccessibleException(new Path($currentPath), \get_debug_type($pointer), Operation::Get);
+                }
+
                 return null;
             }
         }
@@ -358,8 +362,8 @@ class PropertyAccessor
 
             try {
                 $pointer = $this->access($field, $pointer, null, $subContext);
-            } catch(PropertyNotFoundException $e) {
-                if($index !== ($path->getLength() - 1)) {
+            } catch (PropertyNotFoundException $e) {
+                if ($context->hasFlags(Flags::STRICT)) {
                     throw $e;
                 }
 
