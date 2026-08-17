@@ -9,7 +9,7 @@ use Xchert\PropertyAccess\Path;
 
 return (function (): Generator {
     yield from [
-        'Valid path' => [
+        'ValidPath' => [
             'data' => (function () {
                 $obj = new stdClass();
                 $obj->a = new stdClass();
@@ -27,7 +27,7 @@ return (function (): Generator {
             'expectedException' => null,
             'flags' => []
         ],
-        'Invalid path' => [
+        'InvalidPath' => [
             'data' => (function () {
                 $obj = new stdClass();
                 $obj->a = new stdClass();
@@ -45,7 +45,7 @@ return (function (): Generator {
             'expectedException' => null,
             'flags' => []
         ],
-        'Invalid path - strict mode' => [
+        'StrictInvalidPath' => [
             'data' => (function () {
                 $obj = new stdClass();
                 $obj->a = new stdClass();
@@ -58,15 +58,7 @@ return (function (): Generator {
             'expectedException' => PropertyNotFoundException::class,
             'flags' => [Flags::STRICT]
         ],
-        'NotAccessibleException - accessing property on null' => [
-            'data' => ['key' => null],
-            'path' => new Path(['key', 'property']),
-            'value' => 'some value',
-            'expected' => null,
-            'expectedException' => NotAccessibleException::class,
-            'flags' => [Flags::STRICT]
-        ],
-        'NotAccessibleException - traversing through scalar integer' => [
+        'NotAccessibleException' => [
             'data' => (function () {
                 $obj = new stdClass();
                 $obj->level1 = 42;

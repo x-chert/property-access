@@ -7,7 +7,7 @@ use Xchert\Util\Exception\InvalidTypeException;
 
 return (function (): Generator {
     yield from [
-        'Simple merge' => [
+        'SimpleMerge' => [
             'data' => (function () {
                 $obj = new stdClass();
                 $obj->a = 'first letter';

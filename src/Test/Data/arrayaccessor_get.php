@@ -8,21 +8,21 @@ use Xchert\Util\Exception\InvalidTypeException;
 
 return (function (): Generator {
     yield from [
-        'Valid path' => [
+        'ValidPath' => [
             'data' => ['foo' => 'bar', 'hello' => 'world'],
             'field' => 'foo',
             'expected' => 'bar',
             'expectedException' => null,
             'flags' => []
         ],
-        'Invalid path' => [
+        'InvalidPath' => [
             'data' => ['items' => [new stdClass(), new stdClass()]],
             'field' => 'nonexistingproperty',
             'expected' => null,
             'expectedException' => null,
             'flags' => []
         ],
-        'Invalid path - strict mode' => [
+        'StrictInvalidPath' => [
             'data' => ['items' => [new stdClass(), new stdClass()]],
             'field' => 'nonexistingproperty',
             'expected' => null,

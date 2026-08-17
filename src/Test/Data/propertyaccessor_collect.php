@@ -27,7 +27,7 @@ return (function (): Generator {
             'expectedException' => null,
             'flags' => []
         ],
-        'Multicollect' => [
+        'MultiCollect' => [
             'data' => (function () {
                 $obj = new stdClass();
                 $obj->products = ['ABC-123', 'DEF-456'];

@@ -7,7 +7,7 @@ use Xchert\PropertyAccess\Path;
 
 return (function (): Generator {
     yield from [
-        'Valid path' => [
+        'ValidPath' => [
             'data' => (function () {
                 $obj = new stdClass();
                 $obj->a = new stdClass();
@@ -20,14 +20,14 @@ return (function (): Generator {
             'expectedException' => null,
             'flags' => []
         ],
-        'Invalid path' => [
+        'InvalidPath' => [
             'data' => ['items' => [new stdClass(), new stdClass()]],
             'path' => new Path(['items', '0', 'nonexistingproperty']),
             'expected' => false,
             'expectedException' => null,
             'flags' => []
         ],
-        'Empty path' => [
+        'EmptyPath' => [
             'data' => new stdClass(),
             'path' => new Path([]),
             'expected' => null,
