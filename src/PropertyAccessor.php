@@ -6,7 +6,7 @@ namespace Xchert\PropertyAccess;
 
 use Xchert\PropertyAccess\Exception\InvalidInputException;
 use Xchert\PropertyAccess\Exception\InvalidPathException;
-use Xchert\PropertyAccess\Exception\NotAccessableException;
+use Xchert\PropertyAccess\Exception\NotAccessibleException;
 use Xchert\PropertyAccess\Exception\OperationNotSupportedException;
 use Xchert\PropertyAccess\Exception\PropertyNotFoundException;
 
