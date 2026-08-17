@@ -1,23 +1,39 @@
 {
 	"name": "xchert/property-access",
+	"description": "A flexible PHP library for accessing and manipulating nested data structures (arrays and objects) using a unified path-based interface",
 	"type": "library",
 	"keywords": [
-		"properties",
-		"data",
-		"access",
-		"generic"
+		"property-access",
+		"nested-data",
+		"array-access",
+		"object-access",
+		"path",
+		"accessor",
+		"manipulation",
+		"deep-access",
+		"data-structure"
 	],
 	"license": "MIT",
-	"authors": [{
-		"name": "Dustin Simon"
-	}],
+	"authors": [
+		{
+			"name": "Dustin Simon"
+		}
+	],
+	"support": {
+		"issues": "https://github.com/x-chert/property-access/issues",
+		"source": "https://github.com/x-chert/property-access"
+	},
+	"prefer-stable": true,
 	"autoload": {
 		"psr-4": {
 			"Xchert\\PropertyAccess\\": "src/"
-		}
+		},
+		"exclude-from-classmap": [
+			"src/Test/"
+		]
 	},
 	"require": {
-		"php": "^8.3",
+		"php": "^8.4",
 		"xchert/util": "~1.0"
 	},
 	"require-dev": {
