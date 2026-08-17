@@ -220,7 +220,7 @@ class PropertyAccessor
      * @throws PropertyNotFoundException
      * @throws InvalidPathException
      * @throws InvalidInputException
-     * @throws NotAccessableException
+     * @throws NotAccessibleException
      */
     private function collectValues(Path $path, mixed $data, AccessContext $context): array
     {
@@ -241,7 +241,7 @@ class PropertyAccessor
                 if($value !== null) {
                     $result[(string) $resultPath] = $value;
                 }
-            } catch(NotAccessableException|PropertyNotFoundException $e) {
+            } catch (NotAccessibleException|PropertyNotFoundException $e) {
                 if($context->hasFlags(Flags::STRICT)) {
                     throw $e;
                 }
@@ -271,7 +271,7 @@ class PropertyAccessor
 
             try {
                 $pointer = $this->access(null, $pointer, null, $context->subContext(Operation::Collect, $currentPath));
-            } catch(NotAccessableException $e) {
+            } catch (NotAccessibleException $e) {
                 if($context->hasFlags(Flags::STRICT)) {
                     throw $e;
                 }
@@ -281,7 +281,7 @@ class PropertyAccessor
 
             if(!\is_iterable($pointer)) {
                 if($context->hasFlags(Flags::STRICT) && $pointer !== null) {
-                    throw new NotAccessableException($currentPath->copy(), \get_debug_type($pointer), Operation::Collect);
+                    throw new NotAccessibleException($currentPath->copy(), \get_debug_type($pointer), Operation::Collect);
                 }
 
                 return [];
