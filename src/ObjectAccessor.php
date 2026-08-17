@@ -71,6 +71,13 @@ class ObjectAccessor extends Accessor
         $property->setValue($data, $value);
     }
 
+    public function merge(mixed &$data, mixed $value, AccessContext $context): void
+    {
+        Type::validate($data, Type::OBJECT);
+
+        parent::merge($data, $value, $context);
+    }
+
     public function push(mixed &$data, mixed $value, AccessContext $context): void
     {
         throw new OperationNotSupportedException(Operation::Push);

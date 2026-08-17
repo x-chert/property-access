@@ -6,7 +6,7 @@ namespace Xchert\PropertyAccess;
 
 use Xchert\PropertyAccess\Exception\InvalidInputException;
 use Xchert\PropertyAccess\Exception\InvalidPathException;
-use Xchert\PropertyAccess\Exception\NotAccessableException;
+use Xchert\PropertyAccess\Exception\NotAccessibleException;
 use Xchert\PropertyAccess\Exception\OperationNotSupportedException;
 use Xchert\PropertyAccess\Exception\PropertyNotFoundException;
 
@@ -178,12 +178,16 @@ class PropertyAccessor
         $pointer = $data;
         $currentPath = [];
 
-        foreach($path as $field) {
+        foreach ($path as $index => $field) {
             $currentPath[] = $field;
 
             $pointer = $this->access($field, $pointer, null, $context->subContext(Operation::Get, new Path($currentPath)));
 
-            if($pointer === null) {
+            if ($pointer === null) {
+                if (($index < ($path->getLength() - 1)) && $context->hasFlags(Flags::STRICT)) {
+                    throw new NotAccessibleException(new Path($currentPath), \get_debug_type($pointer), Operation::Get);
+                }
+
                 return null;
             }
         }
@@ -216,7 +220,7 @@ class PropertyAccessor
      * @throws PropertyNotFoundException
      * @throws InvalidPathException
      * @throws InvalidInputException
-     * @throws NotAccessableException
+     * @throws NotAccessibleException
      */
     private function collectValues(Path $path, mixed $data, AccessContext $context): array
     {
@@ -237,7 +241,7 @@ class PropertyAccessor
                 if($value !== null) {
                     $result[(string) $resultPath] = $value;
                 }
-            } catch(NotAccessableException|PropertyNotFoundException $e) {
+            } catch (NotAccessibleException|PropertyNotFoundException $e) {
                 if($context->hasFlags(Flags::STRICT)) {
                     throw $e;
                 }
@@ -267,7 +271,7 @@ class PropertyAccessor
 
             try {
                 $pointer = $this->access(null, $pointer, null, $context->subContext(Operation::Collect, $currentPath));
-            } catch(NotAccessableException $e) {
+            } catch (NotAccessibleException $e) {
                 if($context->hasFlags(Flags::STRICT)) {
                     throw $e;
                 }
@@ -277,7 +281,7 @@ class PropertyAccessor
 
             if(!\is_iterable($pointer)) {
                 if($context->hasFlags(Flags::STRICT) && $pointer !== null) {
-                    throw new NotAccessableException($currentPath->copy(), \get_debug_type($pointer), Operation::Collect);
+                    throw new NotAccessibleException($currentPath->copy(), \get_debug_type($pointer), Operation::Collect);
                 }
 
                 return [];
@@ -323,7 +327,7 @@ class PropertyAccessor
             $path = $context->getPath()->copy();
             $path->pop();
 
-            throw new NotAccessableException($path, \get_debug_type($data), $context->getOperation());
+            throw new NotAccessibleException($path, \get_debug_type($data), $context->getOperation());
         }
 
         return $accessor->access($field, $data, $value, $context);
@@ -358,8 +362,8 @@ class PropertyAccessor
 
             try {
                 $pointer = $this->access($field, $pointer, null, $subContext);
-            } catch(PropertyNotFoundException $e) {
-                if($index !== ($path->getLength() - 1)) {
+            } catch (PropertyNotFoundException $e) {
+                if ($context->hasFlags(Flags::STRICT)) {
                     throw $e;
                 }
 

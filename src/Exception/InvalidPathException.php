@@ -15,7 +15,7 @@ class InvalidPathException extends \Exception
     {
         $message = 'Field ';
 
-        if($position !== null) {
+        if ($position !== null) {
             $message .= \sprintf('at position %s ', $position);
         }
 
@@ -26,6 +26,6 @@ class InvalidPathException extends \Exception
 
     public static function emptyPath(): self
     {
-        return new self('Path cannot be empty.', []);
+        return new self('Path cannot be empty.');
     }
 }

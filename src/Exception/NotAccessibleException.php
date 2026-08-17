@@ -5,7 +5,7 @@ namespace Xchert\PropertyAccess\Exception;
 use Xchert\PropertyAccess\Operation;
 use Xchert\PropertyAccess\Path;
 
-class NotAccessableException extends \RuntimeException
+class NotAccessibleException extends \RuntimeException
 {
     public function __construct(
         private readonly Path $path,
@@ -14,11 +14,11 @@ class NotAccessableException extends \RuntimeException
     ) {
         $message = \sprintf('Value of type %s ', $type);
 
-        if(!$path->isEmpty()) {
+        if (!$path->isEmpty()) {
             $message .= \sprintf("at '%s' ", $path);
         }
 
-        $message .= \sprintf("is not accessable for operation '%s'.", $this->operation->value);
+        $message .= \sprintf("is not accessible for operation '%s'.", $this->operation->value);
 
         parent::__construct($message);
     }
