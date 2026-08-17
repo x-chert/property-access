@@ -1,3 +1,19 @@
+# v1.0.0
+### New features
+
+* [#8 - Check for objects in chain writing to prevent unnecessary writes](https://github.com/x-chert/property-access/pull/8)
+
+### Documentation
+
+* [#10 - Create Readme file](https://github.com/x-chert/property-access/pull/10)
+* [#11 - Update composer.json](https://github.com/x-chert/property-access/pull/11)
+
+### Other
+
+* [#9 - Unit tests](https://github.com/x-chert/property-access/pull/9)
+* [#12 - Add autorelease worfklow](https://github.com/x-chert/property-access/pull/12)
+
+
 # v1.0.0-RC4
 
 ### Bugfixes
