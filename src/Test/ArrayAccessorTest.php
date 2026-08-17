@@ -2,236 +2,125 @@
 
 namespace Xchert\PropertyAccess\Test;
 
+use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\TestCase;
 use Xchert\PropertyAccess\AccessContext;
 use Xchert\PropertyAccess\ArrayAccessor;
-use Xchert\PropertyAccess\Exception\PropertyNotFoundException;
-use Xchert\PropertyAccess\Flags;
 use Xchert\PropertyAccess\Operation;
 use Xchert\PropertyAccess\Path;
 use Xchert\PropertyAccess\PropertyAccessor;
-use Xchert\Util\Exception\InvalidTypeException;
+use Xchert\PropertyAccess\Test\Data\FileDataProvider;
 
 class ArrayAccessorTest extends TestCase
 {
-    public function testGet(): void
-    {
-        $arrayAccessor = new ArrayAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($arrayAccessor);
-        $data = ['key1' => 'value1', 'key2' => 'value2'];
-        $context = $this->createContext([], Operation::Get, $propertyAccessor);
+    private ArrayAccessor $accessor;
 
-        $result = $arrayAccessor->get('key1', $data, $context);
-        $this->assertSame('value1', $result);
+    #[DataProviderExternal(FileDataProvider::class, 'arrayaccessor_get')]
+    public function testGet(mixed $data, string $field, mixed $expected, ?string $expectedException = null, array $flags = []): void
+    {
+        $context = $this->createContext($flags, Operation::Get);
+
+        if ($expectedException !== null) {
+            $this->expectException($expectedException);
+        }
+
+        $result = $this->accessor->get($field, $data, $context);
+
+        if ($expectedException === null) {
+            $this->assertEquals($expected, $result);
+        }
     }
 
-    public function testGetNonExistentKey(): void
+    #[DataProviderExternal(FileDataProvider::class, 'arrayaccessor_set')]
+    public function testSet(mixed $data, string $field, mixed $value, mixed $expected, ?string $expectedException = null, array $flags = []): void
     {
-        $arrayAccessor = new ArrayAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($arrayAccessor);
-        $data = ['key1' => 'value1'];
-        $context = $this->createContext([], Operation::Get, $propertyAccessor);
+        $context = $this->createContext($flags, Operation::Set);
 
-        $result = $arrayAccessor->get('nonExistentKey', $data, $context);
-        $this->assertNull($result);
+        if ($expectedException !== null) {
+            $this->expectException($expectedException);
+        }
+
+        $this->accessor->set($field, $data, $value, $context);
+
+        if ($expectedException === null) {
+            $this->assertEquals($expected, $data);
+        }
     }
 
-    public function testGetInvalidTypeThrowsException(): void
+    #[DataProviderExternal(FileDataProvider::class, 'arrayaccessor_push')]
+    public function testPush(mixed $data, mixed $value, mixed $expected, ?string $expectedException = null, array $flags = []): void
     {
-        $arrayAccessor = new ArrayAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($arrayAccessor);
-        $context = $this->createContext([], Operation::Get, $propertyAccessor);
+        $context = $this->createContext($flags, Operation::Push);
 
-        $this->expectException(InvalidTypeException::class);
-        $data = 'notAnArray';
-        $arrayAccessor->get('key', $data, $context);
+        if ($expectedException !== null) {
+            $this->expectException($expectedException);
+        }
+
+        $this->accessor->push($data, $value, $context);
+
+        if ($expectedException === null) {
+            $this->assertEquals($expected, $data);
+        }
     }
 
-    public function testGetWithStrictFlagThrowsException(): void
+    #[DataProviderExternal(FileDataProvider::class, 'arrayaccessor_merge')]
+    public function testMerge(mixed $data, mixed $value, mixed $expected, ?string $expectedException = null, array $flags = []): void
     {
-        $arrayAccessor = new ArrayAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($arrayAccessor);
-        $context = $this->createContext([Flags::STRICT], Operation::Get, $propertyAccessor);
+        $context = $this->createContext($flags, Operation::Merge);
 
-        $data = ['key1' => 'value1'];
-        $this->expectException(PropertyNotFoundException::class);
-        $arrayAccessor->get('nonExistentKey', $data, $context);
+        if ($expectedException !== null) {
+            $this->expectException($expectedException);
+        }
+
+        $this->accessor->merge($data, $value, $context);
+
+        if ($expectedException === null) {
+            $this->assertEquals($expected, $data);
+        }
     }
 
-    public function testSet(): void
+    #[DataProviderExternal(FileDataProvider::class, 'arrayaccessor_collect')]
+    public function testCollect(mixed $data, mixed $expected, ?string $expectedException = null, array $flags = []): void
     {
-        $arrayAccessor = new ArrayAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($arrayAccessor);
-        $context = $this->createContext([], Operation::Set, $propertyAccessor);
+        $context = $this->createContext($flags, Operation::Collect);
 
-        $data = [];
-        $arrayAccessor->set('key1', $data, 'value1', $context);
-        $this->assertSame(['key1' => 'value1'], $data);
+        if ($expectedException !== null) {
+            $this->expectException($expectedException);
+        }
+
+        $result = $this->accessor->collect($data, $context);
+
+        if ($expectedException === null) {
+            $this->assertEquals($expected, $result);
+        }
     }
 
-    public function testSetOverwrite(): void
+    #[DataProviderExternal(FileDataProvider::class, 'arrayaccessor_has')]
+    public function testHas(mixed $data, string $field, ?bool $expected, ?string $expectedException = null, array $flags = []): void
     {
-        $arrayAccessor = new ArrayAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($arrayAccessor);
-        $context = $this->createContext([], Operation::Set, $propertyAccessor);
+        $context = $this->createContext($flags, Operation::Has);
 
-        $data = ['key1' => 'value1'];
-        $arrayAccessor->set('key1', $data, 'newValue', $context);
-        $this->assertSame(['key1' => 'newValue'], $data);
+        if ($expectedException !== null) {
+            $this->expectException($expectedException);
+        }
+
+        $result = $this->accessor->has($field, $data, $context);
+
+        if ($expectedException === null) {
+            $this->assertSame($expected, $result);
+        }
     }
 
-    public function testSetInvalidTypeThrowsException(): void
+    protected function setUp(): void
     {
-        $arrayAccessor = new ArrayAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($arrayAccessor);
-        $context = $this->createContext([], Operation::Set, $propertyAccessor);
-
-        $this->expectException(InvalidTypeException::class);
-        $data = 'notAnArray';
-        $arrayAccessor->set('key2', $data, 'value2', $context);
+        $this->accessor = new ArrayAccessor();
     }
 
-    public function testPushToEmptyArray(): void
-    {
-        $arrayAccessor = new ArrayAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($arrayAccessor);
-        $context = $this->createContext([], Operation::Push, $propertyAccessor);
-
-        $data = [];
-        $arrayAccessor->push($data, 'value1', $context);
-        $this->assertSame(['value1'], $data);
-    }
-
-    public function testPushMultiple(): void
-    {
-        $arrayAccessor = new ArrayAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($arrayAccessor);
-        $context = $this->createContext([], Operation::Push, $propertyAccessor);
-
-        $data = ['value1'];
-        $arrayAccessor->push($data, 'value2', $context);
-        $arrayAccessor->push($data, 'value3', $context);
-        $this->assertSame(['value1', 'value2', 'value3'], $data);
-    }
-
-    public function testPushInvalidTypeThrowsException(): void
-    {
-        $arrayAccessor = new ArrayAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($arrayAccessor);
-        $context = $this->createContext([], Operation::Push, $propertyAccessor);
-
-        $this->expectException(InvalidTypeException::class);
-        $data = 'notAnArray';
-        $arrayAccessor->push($data, 'value4', $context);
-    }
-
-    public function testCollect(): void
-    {
-        $arrayAccessor = new ArrayAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($arrayAccessor);
-        $context = $this->createContext([], Operation::Collect, $propertyAccessor);
-
-        $data = ['key1' => 'value1', 'key2' => 'value2'];
-        $result = $arrayAccessor->collect($data, $context);
-        $this->assertSame(['key1' => 'value1', 'key2' => 'value2'], $result);
-    }
-
-    public function testCollectInvalidTypeThrowsException(): void
-    {
-        $arrayAccessor = new ArrayAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($arrayAccessor);
-        $context = $this->createContext([], Operation::Collect, $propertyAccessor);
-
-        $this->expectException(InvalidTypeException::class);
-        $data = 'notAnArray';
-        $arrayAccessor->collect($data, $context);
-    }
-
-    public function testHas(): void
-    {
-        $arrayAccessor = new ArrayAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($arrayAccessor);
-        $context = $this->createContext([], Operation::Has, $propertyAccessor);
-
-        $data = ['existingKey' => 'value'];
-        $result = $arrayAccessor->has('existingKey', $data, $context);
-        $this->assertTrue($result);
-    }
-
-    public function testHasNonExistentKey(): void
-    {
-        $arrayAccessor = new ArrayAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($arrayAccessor);
-        $context = $this->createContext([], Operation::Has, $propertyAccessor);
-
-        $data = ['existingKey' => 'value'];
-        $result = $arrayAccessor->has('nonExistentKey', $data, $context);
-        $this->assertFalse($result);
-    }
-
-    public function testHasInvalidTypeThrowsException(): void
-    {
-        $arrayAccessor = new ArrayAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($arrayAccessor);
-        $context = $this->createContext([], Operation::Has, $propertyAccessor);
-
-        $this->expectException(InvalidTypeException::class);
-        $data = 'notAnArray';
-        $arrayAccessor->has('key', $data, $context);
-    }
-
-    public function testMerge(): void
-    {
-        $arrayAccessor = new ArrayAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($arrayAccessor);
-        $context = $this->createContext([], Operation::Merge, $propertyAccessor);
-
-        $data = ['key1' => 'value1'];
-        $arrayAccessor->merge($data, ['key2' => 'value2', 'key3' => 'value3'], $context);
-        $this->assertSame(
-            ['key1' => 'value1', 'key2' => 'value2', 'key3' => 'value3'],
-            $data
-        );
-    }
-
-    public function testMergeNumericKeys(): void
-    {
-        $arrayAccessor = new ArrayAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($arrayAccessor);
-        $context = $this->createContext([], Operation::Merge, $propertyAccessor);
-
-        $data = [0 => 'value1'];
-        $arrayAccessor->merge($data, [0 => 'value2'], $context);
-        $this->assertSame(
-            [0 => 'value1', 1 => 'value2'],
-            $data
-        );
-    }
-
-    public function testMergeOverwriteNumericKeys(): void
-    {
-        $arrayAccessor = new ArrayAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($arrayAccessor);
-        $context = $this->createContext([ArrayAccessor::MERGE_OVERWRITE_NUMERIC], Operation::Merge, $propertyAccessor);
-
-        $data = [0 => 'value1'];
-        $arrayAccessor->merge($data, [0 => 'value2'], $context);
-        $this->assertSame(
-            [0 => 'value2'],
-            $data
-        );
-    }
-
-    private function createPropertyAccessor(ArrayAccessor $accessor): PropertyAccessor
+    private function createContext(array $flags, Operation $operation): AccessContext
     {
         $propertyAccessor = new PropertyAccessor();
-        $propertyAccessor->registerAccessor($accessor, ArrayAccessor::ID, 0);
+        $propertyAccessor->registerAccessor($this->accessor, ArrayAccessor::ID, 0);
 
-        return $propertyAccessor;
-    }
-
-    private function createContext(array $flags, Operation $operation, PropertyAccessor $propertyAccessor): AccessContext
-    {
         return new AccessContext($operation, new Path(), $propertyAccessor, ...$flags);
     }
 }

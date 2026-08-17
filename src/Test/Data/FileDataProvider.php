@@ -6,6 +6,36 @@ namespace Xchert\PropertyAccess\Test\Data;
 
 class FileDataProvider
 {
+    public static function arrayaccessor_get(): iterable
+    {
+        return static::readFile(__DIR__.'/arrayaccessor_get.php');
+    }
+
+    public static function arrayaccessor_set(): iterable
+    {
+        return static::readFile(__DIR__.'/arrayaccessor_set.php');
+    }
+
+    public static function arrayaccessor_push(): iterable
+    {
+        return static::readFile(__DIR__.'/arrayaccessor_push.php');
+    }
+
+    public static function arrayaccessor_merge(): iterable
+    {
+        return static::readFile(__DIR__.'/arrayaccessor_merge.php');
+    }
+
+    public static function arrayaccessor_collect(): iterable
+    {
+        return static::readFile(__DIR__.'/arrayaccessor_collect.php');
+    }
+
+    public static function arrayaccessor_has(): iterable
+    {
+        return static::readFile(__DIR__.'/arrayaccessor_has.php');
+    }
+
     public static function propertyaccessor_get(): iterable
     {
         return static::readFile(__DIR__.'/propertyaccessor_get.php');
