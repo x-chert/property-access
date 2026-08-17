@@ -36,6 +36,26 @@ class FileDataProvider
         return static::readFile(__DIR__.'/arrayaccessor_has.php');
     }
 
+    public static function objectaccessor_get(): iterable
+    {
+        return static::readFile(__DIR__.'/objectaccessor_get.php');
+    }
+
+    public static function objectaccessor_set(): iterable
+    {
+        return static::readFile(__DIR__.'/objectaccessor_set.php');
+    }
+
+    public static function objectaccessor_merge(): iterable
+    {
+        return static::readFile(__DIR__.'/objectaccessor_merge.php');
+    }
+
+    public static function objectaccessor_has(): iterable
+    {
+        return static::readFile(__DIR__.'/objectaccessor_has.php');
+    }
+
     public static function propertyaccessor_get(): iterable
     {
         return static::readFile(__DIR__.'/propertyaccessor_get.php');

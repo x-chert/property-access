@@ -2,301 +2,109 @@
 
 namespace Xchert\PropertyAccess\Test;
 
+use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\TestCase;
 use Xchert\PropertyAccess\AccessContext;
 use Xchert\PropertyAccess\Exception\OperationNotSupportedException;
-use Xchert\PropertyAccess\Exception\PropertyNotFoundException;
-use Xchert\PropertyAccess\Flags;
 use Xchert\PropertyAccess\ObjectAccessor;
 use Xchert\PropertyAccess\Operation;
 use Xchert\PropertyAccess\Path;
 use Xchert\PropertyAccess\PropertyAccessor;
-use Xchert\PropertyAccess\Test\Classes\ChildDemo;
+use Xchert\PropertyAccess\Test\Data\FileDataProvider;
 
 class ObjectAccessorTest extends TestCase
 {
-    public function testGetPropertyDirectly(): void
+    private ObjectAccessor $accessor;
+
+    #[DataProviderExternal(FileDataProvider::class, 'objectaccessor_get')]
+    public function testGet(mixed $data, string $field, mixed $expected, ?string $expectedException = null, array $flags = []): void
     {
-        $object = new class {
-            private string $name = 'John';
-        };
+        $context = $this->createContext($flags, Operation::Get);
 
-        $accessor = new ObjectAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($accessor);
-        $context = $this->createContext([], Operation::Get, $propertyAccessor);
+        if ($expectedException !== null) {
+            $this->expectException($expectedException);
+        }
 
-        $result = $accessor->get('name', $object, $context);
+        $result = $this->accessor->get($field, $data, $context);
 
-        $this->assertEquals('John', $result);
+        if ($expectedException === null) {
+            $this->assertEquals($expected, $result);
+        }
     }
 
-    public function testGetMethodViaGetter(): void
+    #[DataProviderExternal(FileDataProvider::class, 'objectaccessor_set')]
+    public function testSet(mixed $data, string $field, mixed $value, mixed $expected, ?string $expectedException = null, array $flags = []): void
     {
-        $object = new class() {
-            private string $name = 'John';
-            public bool $getNameCalled = false;
+        $context = $this->createContext($flags, Operation::Set);
 
-            public function getName(): string
-            {
-                $this->getNameCalled = true;
-                return $this->name;
-            }
-        };
+        if ($expectedException !== null) {
+            $this->expectException($expectedException);
+        }
 
-        $accessor = new ObjectAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($accessor);
-        $context = $this->createContext([], Operation::Get, $propertyAccessor);
+        $this->accessor->set($field, $data, $value, $context);
 
-        $result = $accessor->get('name', $object, $context);
-
-        $this->assertEquals('John', $result);
-        $this->assertTrue($object->getNameCalled, 'getName method was not called');
+        if ($expectedException === null) {
+            $this->assertEquals($expected, $data);
+        }
     }
 
-    public function testGetReturnsNullForUninitializedProperty(): void
+    #[DataProviderExternal(FileDataProvider::class, 'objectaccessor_merge')]
+    public function testMerge(mixed $data, mixed $value, mixed $expected, ?string $expectedException = null, array $flags = []): void
     {
-        $object = new class {
-            public string $name;
-        };
+        $context = $this->createContext($flags, Operation::Merge);
 
-        $accessor = new ObjectAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($accessor);
-        $context = $this->createContext([], Operation::Get, $propertyAccessor);
+        if ($expectedException !== null) {
+            $this->expectException($expectedException);
+        }
 
-        $result = $accessor->get('name', $object, $context);
+        $this->accessor->merge($data, $value, $context);
 
-        $this->assertNull($result);
+        if ($expectedException === null) {
+            $this->assertEquals($expected, $data);
+        }
+    }
+    
+    #[DataProviderExternal(FileDataProvider::class, 'objectaccessor_has')]
+    public function testHas(mixed $data, string $field, ?bool $expected, ?string $expectedException = null, array $flags = []): void
+    {
+        $context = $this->createContext($flags, Operation::Has);
+
+        if ($expectedException !== null) {
+            $this->expectException($expectedException);
+        }
+
+        $result = $this->accessor->has($field, $data, $context);
+
+        if ($expectedException === null) {
+            $this->assertSame($expected, $result);
+        }
     }
 
-    public function testGetThrowsPropertyNotFoundExceptionWithStrictFlag(): void
+    public function testPush(): void
     {
-        $object = new \stdClass();
-
-        $accessor = new ObjectAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($accessor);
-        $context = $this->createContext([Flags::STRICT], Operation::Get, $propertyAccessor);
-
-        $this->expectException(PropertyNotFoundException::class);
-        $accessor->get('nonexistentProperty', $object, $context);
-    }
-
-    public function testGetReturnsNullIfPropertyDoesNotExistWithoutStrictFlag(): void
-    {
-        $object = new \stdClass();
-
-        $accessor = new ObjectAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($accessor);
-        $context = $this->createContext([], Operation::Get, $propertyAccessor);
-
-        $result = $accessor->get('nonexistentProperty', $object, $context);
-
-        $this->assertNull($result);
-    }
-
-    public function testGetInheritedProperty(): void
-    {
-        $object = new ChildDemo();
-
-        $accessor = new ObjectAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($accessor);
-        $context = $this->createContext([], Operation::Get, $propertyAccessor);
-
-        $result = $accessor->get('birthday', $object, $context);
-
-        $this->assertEquals('1990-01-01', $result);
-    }
-
-    public function testGetInheritedPropertyViaGetter(): void
-    {
-        $object = new ChildDemo();
-
-        $accessor = new ObjectAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($accessor);
-        $context = $this->createContext([], Operation::Get, $propertyAccessor);
-
-        $result = $accessor->get('name', $object, $context);
-
-        $this->assertEquals('John', $result);
-        $this->assertTrue($object->isGotName());
-    }
-
-    public function testSetPropertyDirectly(): void
-    {
-        $object = new class {
-            private string $name = 'John';
-
-            public function getName(): string
-            {
-                return $this->name;
-            }
-        };
-
-        $accessor = new ObjectAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($accessor);
-        $context = $this->createContext([], Operation::Set, $propertyAccessor);
-
-        $accessor->set('name', $object, 'Doe', $context);
-
-        $this->assertEquals('Doe', $object->getName());
-    }
-
-    public function testSetMethodViaSetter(): void
-    {
-        $object = new class {
-            private string $name = 'John';
-            public bool $setNameCalled = false;
-
-            public function setName(string $name): void
-            {
-                $this->setNameCalled = true;
-                $this->name = $name;
-            }
-
-            public function getName(): string
-            {
-                return $this->name;
-            }
-        };
-
-        $accessor = new ObjectAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($accessor);
-        $context = $this->createContext([], Operation::Set, $propertyAccessor);
-
-        $accessor->set('name', $object, 'Doe', $context);
-
-        $this->assertEquals('Doe', $object->getName());
-        $this->assertTrue($object->setNameCalled, 'setName method was not called');
-    }
-
-    public function testSetThrowsPropertyNotFoundExceptionWithStrictFlag(): void
-    {
-        $object = new \stdClass();
-
-        $accessor = new ObjectAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($accessor);
-        $context = $this->createContext([Flags::STRICT], Operation::Set, $propertyAccessor);
-
-        $this->expectException(PropertyNotFoundException::class);
-        $accessor->set('nonexistentProperty', $object, 'value', $context);
-    }
-
-    public function testSetDoesNothingIfPropertyDoesNotExistWithoutStrictFlag(): void
-    {
-        $object = new \stdClass();
-
-        $accessor = new ObjectAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($accessor);
-        $context = $this->createContext([], Operation::Set, $propertyAccessor);
-
-        $accessor->set('nonexistentProperty', $object, 'value', $context);
-
-        $this->assertTrue(true, 'Setting nonexistent property without strict flag should not throw an exception');
-    }
-
-    public function testSetInheritedPropertyDirectly(): void
-    {
-        $object = new ChildDemo();
-
-        $accessor = new ObjectAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($accessor);
-        $context = $this->createContext([], Operation::Set, $propertyAccessor);
-
-        $accessor->set('birthday', $object, '2000-12-31', $context);
-
-        $this->assertEquals('2000-12-31', $object->birthday);
-    }
-
-    public function testSetInheritedPropertyViaSetter(): void
-    {
-        $object = new ChildDemo();
-
-        $accessor = new ObjectAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($accessor);
-        $context = $this->createContext([], Operation::Set, $propertyAccessor);
-
-        $accessor->set('name', $object, 'Jane', $context);
-
-        $this->assertEquals('Jane', $object->getName());
-        $this->assertTrue($object->isSetName());
-    }
-
-    public function testHasReturnsTrueForExistingProperty(): void
-    {
-        $object = new class {
-            public string $name = 'John';
-        };
-
-        $accessor = new ObjectAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($accessor);
-        $context = $this->createContext([], Operation::Get, $propertyAccessor);
-
-        $result = $accessor->has('name', $object, $context);
-
-        $this->assertTrue($result, 'has method did not return true for an existing property');
-    }
-
-    public function testHasReturnsFalseForNonExistentProperty(): void
-    {
-        $object = new class {
-            public string $name = 'John';
-        };
-
-        $accessor = new ObjectAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($accessor);
-        $context = $this->createContext([], Operation::Get, $propertyAccessor);
-
-        $result = $accessor->has('nonexistent', $object, $context);
-
-        $this->assertFalse($result, 'has method did not return false for a nonexistent property');
-    }
-
-    public function testHasReturnsTrueForInheritedProperty(): void
-    {
-        $object = new ChildDemo();
-
-        $accessor = new ObjectAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($accessor);
-        $context = $this->createContext([], Operation::Has, $propertyAccessor);
-
-        $result = $accessor->has('name', $object, $context);
-
-        $this->assertTrue($result, 'has method did not return true for inherited property');
-    }
-
-    public function testPushThrowsOperationNotSupportedException(): void
-    {
-        $object = new \stdClass();
-
-        $accessor = new ObjectAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($accessor);
-        $context = $this->createContext([], Operation::Push, $propertyAccessor);
-
         $this->expectException(OperationNotSupportedException::class);
-        $accessor->push($object, 'value', $context);
+        $data = [];
+
+        $this->accessor->push($data, 'some value', $this->createContext([], Operation::Push));
     }
 
-    public function testCollectThrowsOperationNotSupportedException(): void
+    public function testCollect(): void
     {
-        $object = new \stdClass();
-
-        $accessor = new ObjectAccessor();
-        $propertyAccessor = $this->createPropertyAccessor($accessor);
-        $context = $this->createContext([], Operation::Collect, $propertyAccessor);
-
         $this->expectException(OperationNotSupportedException::class);
-        $accessor->collect($object, $context);
+
+        $this->accessor->collect([], $this->createContext([], Operation::Collect));
     }
 
-    private function createPropertyAccessor(ObjectAccessor $accessor): PropertyAccessor
+    protected function setUp(): void
+    {
+        $this->accessor = new ObjectAccessor();
+    }
+
+    private function createContext(array $flags, Operation $operation): AccessContext
     {
         $propertyAccessor = new PropertyAccessor();
-        $propertyAccessor->registerAccessor($accessor, ObjectAccessor::ID, 0);
+        $propertyAccessor->registerAccessor($this->accessor, ObjectAccessor::ID, 0);
 
-        return $propertyAccessor;
-    }
-
-    private function createContext(array $flags, Operation $operation, PropertyAccessor $propertyAccessor): AccessContext
-    {
         return new AccessContext($operation, new Path(), $propertyAccessor, ...$flags);
     }
 }
