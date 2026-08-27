@@ -9,8 +9,8 @@ class PathCollection extends Collection
     public function hasPath(Path $path): bool
     {
         /** @var Path $comparePath */
-        foreach($this->items as $comparePath) {
-            if($comparePath->equals($path)) {
+        foreach ($this->items as $comparePath) {
+            if ($comparePath->equals($path)) {
                 return true;
             }
         }
@@ -23,7 +23,7 @@ class PathCollection extends Collection
      */
     protected function createKey(mixed $value): ?string
     {
-        return (string) $value;
+        return (string)$value;
     }
 
     protected function supports(mixed $value): bool

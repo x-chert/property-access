@@ -3,6 +3,7 @@
 namespace Xchert\PropertyAccess;
 
 use Xchert\PropertyAccess\Exception\InvalidInputException;
+use Xchert\PropertyAccess\Exception\InvalidPathException;
 use Xchert\Util\Reflection;
 
 class Util
@@ -11,8 +12,9 @@ class Util
 
     public static function hasCollector(Path $path): bool
     {
-        foreach($path as $field) {
-            if($field === self::COLLECTOR_FIELD) {
+        /** @var string $field */
+        foreach ($path as $field) {
+            if ($field === self::COLLECTOR_FIELD) {
                 return true;
             }
         }
@@ -20,17 +22,22 @@ class Util
         return false;
     }
 
+    /**
+     * @throws InvalidPathException
+     * @throws \JsonException
+     */
     public static function flatToNested(array $data): array
     {
         $result = [];
 
-        foreach($data as $path => $value) {
+        foreach ($data as $path => $value) {
             $path = Path::parse($path);
 
             $pointer = &$result;
 
-            foreach($path as $field) {
-                if(!isset($pointer[$field])) {
+            /** @var string $field */
+            foreach ($path as $field) {
+                if (!isset($pointer[$field])) {
                     $pointer[$field] = [];
                 }
 
@@ -44,16 +51,17 @@ class Util
     }
 
     /**
+     * @throws \ReflectionException
      * @throws InvalidInputException
      */
     public static function valueToMerge(mixed $data): \Generator
     {
-        if(!static::isMergeable($data)) {
+        if (!static::isMergeable($data)) {
             throw InvalidInputException::notMergable($data);
         }
 
-        if(\is_iterable($data)) {
-            foreach($data as $key => $value) {
+        if (\is_iterable($data)) {
+            foreach ($data as $key => $value) {
                 yield $key => $value;
             }
 
@@ -63,18 +71,18 @@ class Util
         $reflectionObject = new \ReflectionObject($data);
 
         /** @var \ReflectionProperty $reflectionProperty */
-        foreach(Reflection::getProperties($reflectionObject) as $reflectionProperty) {
+        foreach (Reflection::getProperties($reflectionObject) as $reflectionProperty) {
             $name = $reflectionProperty->getName();
 
             $method = Reflection::getMethod($reflectionObject, \sprintf('get%s', \ucfirst($name)));
 
-            if($method !== null) {
+            if ($method !== null) {
                 yield $name => $method->invoke($data);
 
                 continue;
             }
 
-            if($reflectionProperty->hasType() && !$reflectionProperty->isInitialized($data)) {
+            if ($reflectionProperty->hasType() && !$reflectionProperty->isInitialized($data)) {
                 yield $name => null;
 
                 continue;
@@ -91,7 +99,7 @@ class Util
 
     public static function isIndexField(string $field): bool
     {
-        return $field === (string) (int) $field;
+        return $field === (string)(int)$field;
     }
 
 }

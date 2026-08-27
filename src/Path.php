@@ -19,21 +19,22 @@ class Path implements \IteratorAggregate, \Stringable, \JsonSerializable
         $this->setPath($path);
     }
 
-    public static function isValid(string $path): bool {
+    public static function isValid(string $path): bool
+    {
         try {
             $path = Json::decode($path);
-        } catch(\JsonException) {
+        } catch (\JsonException) {
             return false;
         }
 
-        if(!\is_array($path) || !\array_is_list($path)) {
+        if (!\is_array($path) || !\array_is_list($path)) {
             return false;
         }
 
-        foreach($path as $field) {
+        foreach ($path as $field) {
             try {
                 self::validateField($field);
-            } catch(InvalidPathException) {
+            } catch (InvalidPathException) {
                 return false;
             }
         }
@@ -45,8 +46,9 @@ class Path implements \IteratorAggregate, \Stringable, \JsonSerializable
      * @throws InvalidPathException
      * @throws \JsonException
      */
-    public static function ensure(string|self $path): Path {
-        if(\is_string($path)) {
+    public static function ensure(string|self $path): Path
+    {
+        if (\is_string($path)) {
             $path = self::parse($path);
         }
 
@@ -62,6 +64,20 @@ class Path implements \IteratorAggregate, \Stringable, \JsonSerializable
         $path = Json::decode($path);
 
         return new self($path);
+    }
+
+    /**
+     * @throws InvalidPathException
+     */
+    private static function validateField(mixed $field, ?int $position = null): void
+    {
+        if (!\is_string($field) && !Type::isStringConvertable(Type::getType($field))) {
+            throw InvalidPathException::invalidPathElement($field);
+        }
+
+        if (Value::isEmpty((string)$field)) {
+            throw InvalidPathException::emptyField($position);
+        }
     }
 
     public function getIterator(): \Traversable
@@ -94,7 +110,7 @@ class Path implements \IteratorAggregate, \Stringable, \JsonSerializable
     {
         $new = new Path($this->path);
 
-        foreach($path as $field) {
+        foreach ($path as $field) {
             $new->add($field);
         }
 
@@ -123,7 +139,7 @@ class Path implements \IteratorAggregate, \Stringable, \JsonSerializable
 
     public function equals(self $path): bool
     {
-        if($this->getLength() !== $path->getLength()) {
+        if ($this->getLength() !== $path->getLength()) {
             return false;
         }
 
@@ -147,23 +163,9 @@ class Path implements \IteratorAggregate, \Stringable, \JsonSerializable
     {
         $path = \array_values($path);
 
-        foreach($path as $index => $field) {
+        foreach ($path as $index => $field) {
             self::validateField($field, $index);
-            $this->path[] = (string) $field;
-        }
-    }
-
-    /**
-     * @throws InvalidPathException
-     */
-    private static function validateField(mixed $field, ?int $position = null): void
-    {
-        if(!\is_string($field) && !Type::isStringConvertable(Type::getType($field))) {
-            throw InvalidPathException::invalidPathElement($field);
-        }
-
-        if(Value::isEmpty((string) $field)) {
-            throw InvalidPathException::emptyField($position);
+            $this->path[] = (string)$field;
         }
     }
 }

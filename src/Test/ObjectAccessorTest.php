@@ -63,7 +63,7 @@ class ObjectAccessorTest extends TestCase
             $this->assertEquals($expected, $data);
         }
     }
-    
+
     #[DataProviderExternal(FileDataProvider::class, 'objectaccessor_has')]
     public function testHas(mixed $data, string $field, ?bool $expected, ?string $expectedException = null, array $flags = []): void
     {

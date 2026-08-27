@@ -44,10 +44,11 @@ class PropertyAccessor
      * @throws InvalidPathException
      * @throws PropertyNotFoundException
      * @throws InvalidInputException
+     * @throws OperationNotSupportedException
      */
     public function set(Path $path, mixed &$data, mixed $value, string ...$flags): void
     {
-        if($path->isEmpty()) {
+        if ($path->isEmpty()) {
             throw InvalidPathException::emptyPath();
         }
 
@@ -86,6 +87,7 @@ class PropertyAccessor
      * @throws PropertyNotFoundException
      * @throws InvalidPathException
      * @throws InvalidInputException
+     * @throws \JsonException
      */
     public function collect(PathCollection $paths, mixed $data, string ...$flags): array
     {
@@ -94,7 +96,7 @@ class PropertyAccessor
         $result = [];
 
         /** @var Path $path */
-        foreach($paths as $path) {
+        foreach ($paths as $path) {
             $set = $this->collectValues($path, $data, $context);
 
             $result = \array_merge_recursive($result, $set);
@@ -108,11 +110,11 @@ class PropertyAccessor
      */
     public function has(Path $path, mixed $data, string ...$flags): bool
     {
-        if($path->isEmpty()) {
+        if ($path->isEmpty()) {
             throw InvalidPathException::emptyPath();
         }
 
-        if($data === null) {
+        if ($data === null) {
             return false;
         }
 
@@ -121,14 +123,14 @@ class PropertyAccessor
         $pointer = $data;
         $currentPath = [];
 
-        foreach($path as $field) {
-            if($pointer === null) {
+        foreach ($path as $field) {
+            if ($pointer === null) {
                 return false;
             }
 
             $currentPath[] = $field;
 
-            if(!$this->access($field, $pointer, null, $context->subContext(Operation::Has, new Path($currentPath)))) {
+            if (!$this->access($field, $pointer, null, $context->subContext(Operation::Has, new Path($currentPath)))) {
                 return false;
             }
 
@@ -146,11 +148,11 @@ class PropertyAccessor
      */
     public function write(Path $path, mixed &$data, mixed $value, AccessContext $context): void
     {
-        if($data === null) {
+        if ($data === null) {
             throw new InvalidInputException('Value of null is not writable');
         }
 
-        if($path->isEmpty()) {
+        if ($path->isEmpty()) {
             $this->access(null, $data, $value, $context);
 
             return;
@@ -171,7 +173,7 @@ class PropertyAccessor
 
     private function getValue(Path $path, mixed $data, AccessContext $context): mixed
     {
-        if($data === null) {
+        if ($data === null) {
             return null;
         }
 
@@ -199,14 +201,15 @@ class PropertyAccessor
      * @throws InvalidPathException
      * @throws InvalidInputException
      * @throws PropertyNotFoundException
+     * @throws OperationNotSupportedException
      */
     private function setValue(Path $path, mixed &$data, mixed $value, AccessContext $context): void
     {
-        if($data === null) {
+        if ($data === null) {
             throw new InvalidInputException('Cannot set value to a null.');
         }
 
-        if($path->isEmpty()) {
+        if ($path->isEmpty()) {
             throw InvalidPathException::emptyPath();
         }
 
@@ -221,16 +224,17 @@ class PropertyAccessor
      * @throws InvalidPathException
      * @throws InvalidInputException
      * @throws NotAccessibleException
+     * @throws \JsonException
      */
     private function collectValues(Path $path, mixed $data, AccessContext $context): array
     {
-        if($data === null) {
+        if ($data === null) {
             throw new InvalidInputException('Cannot collect from a null value.');
         }
 
         $result = [];
 
-        if(!Util::hasCollector($path)) {
+        if (!Util::hasCollector($path)) {
             $subContext = $context->subContext(Operation::Get, new Path());
             $subContext->addFlag(Flags::STRICT);
 
@@ -238,11 +242,11 @@ class PropertyAccessor
             try {
                 $value = $this->getValue($path, $data, $subContext);
 
-                if($value !== null) {
-                    $result[(string) $resultPath] = $value;
+                if ($value !== null) {
+                    $result[(string)$resultPath] = $value;
                 }
             } catch (NotAccessibleException|PropertyNotFoundException $e) {
-                if($context->hasFlags(Flags::STRICT)) {
+                if ($context->hasFlags(Flags::STRICT)) {
                     throw $e;
                 }
 
@@ -257,12 +261,12 @@ class PropertyAccessor
         $path = $path->toArray();
 
         /** @var string $field */
-        while(($field = \array_shift($path)) !== null) {
-            if($field !== Util::COLLECTOR_FIELD) {
+        while (($field = \array_shift($path)) !== null) {
+            if ($field !== Util::COLLECTOR_FIELD) {
                 $currentPath->add($field);
                 $pointer = $this->access($field, $pointer, null, $context->subContext(Operation::Get, $currentPath));
 
-                if($pointer === null) {
+                if ($pointer === null) {
                     return $result;
                 }
 
@@ -272,30 +276,30 @@ class PropertyAccessor
             try {
                 $pointer = $this->access(null, $pointer, null, $context->subContext(Operation::Collect, $currentPath));
             } catch (NotAccessibleException $e) {
-                if($context->hasFlags(Flags::STRICT)) {
+                if ($context->hasFlags(Flags::STRICT)) {
                     throw $e;
                 }
 
                 return [];
             }
 
-            if(!\is_iterable($pointer)) {
-                if($context->hasFlags(Flags::STRICT) && $pointer !== null) {
+            if (!\is_iterable($pointer)) {
+                if ($context->hasFlags(Flags::STRICT) && $pointer !== null) {
                     throw new NotAccessibleException($currentPath->copy(), \get_debug_type($pointer), Operation::Collect);
                 }
 
                 return [];
             }
 
-            foreach($pointer as $index => $item) {
-                if(empty($path)) {
-                    $itemPath = $context->getPath()->merge($currentPath)->add((string) $index);
-                    $result[(string) $itemPath] = $item;
+            foreach ($pointer as $index => $item) {
+                if (empty($path)) {
+                    $itemPath = $context->getPath()->merge($currentPath)->add((string)$index);
+                    $result[(string)$itemPath] = $item;
 
                     continue;
                 }
 
-                $subContext = $context->subContext(Operation::Collect, $currentPath->copy()->add((string) $index));
+                $subContext = $context->subContext(Operation::Collect, $currentPath->copy()->add((string)$index));
                 $subContext->removeFlag(Flags::COLLECT_NESTED);
 
                 $itemResult = $this->collectValues(new Path($path), $item, $subContext);
@@ -319,8 +323,8 @@ class PropertyAccessor
     {
         $accessor = $this->getAccessor($context->getOperation(), $data);
 
-        if($accessor === null) {
-            if(!$context->hasFlags(Flags::STRICT)) {
+        if ($accessor === null) {
+            if (!$context->hasFlags(Flags::STRICT)) {
                 return null;
             }
 
@@ -335,10 +339,10 @@ class PropertyAccessor
 
     private function getAccessor(Operation $operation, mixed $value): ?Accessor
     {
-        foreach($this->accessors as $record) {
+        foreach ($this->accessors as $record) {
             $accessor = $record['accessor'];
 
-            if($accessor->supports($operation, $value)) {
+            if ($accessor->supports($operation, $value)) {
                 return $accessor;
             }
         }
@@ -355,7 +359,7 @@ class PropertyAccessor
         $currentPath = [];
         $pointer = $data;
 
-        foreach($path as $index => $field) {
+        foreach ($path as $index => $field) {
             $currentPath[] = $field;
             $subContext = $context->subContext(Operation::Get, new Path($currentPath));
             $subContext->addFlag(Flags::STRICT);
@@ -379,12 +383,18 @@ class PropertyAccessor
         return $chain;
     }
 
+    /**
+     * @throws InvalidPathException
+     * @throws InvalidInputException
+     * @throws PropertyNotFoundException
+     * @throws OperationNotSupportedException
+     */
     private function writeChain(array $chain, mixed &$data, AccessContext $context): void
     {
         $currentElement = \array_pop($chain);
         $currentPath = [];
 
-        foreach(\array_reverse($chain) as $record) {
+        foreach (\array_reverse($chain) as $record) {
             $currentValue = $record['value'];
             $field = $currentElement['field'];
 
@@ -410,10 +420,10 @@ class PropertyAccessor
         $subPath = new Path(\array_reverse($subPath->toArray()));
         $result = new Path();
 
-        while(($field = $path->shift()) !== null) {
+        while (($field = $path->shift()) !== null) {
             $result->add($field);
 
-            if($path->equals($subPath)) {
+            if ($path->equals($subPath)) {
                 return $result;
             }
         }
