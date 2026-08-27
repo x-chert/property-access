@@ -20,8 +20,8 @@ enum Operation: string
      */
     public static function getByValue(string $value): Operation
     {
-        foreach(self::cases() as $operation) {
-            if($operation->value === $value) {
+        foreach (self::cases() as $operation) {
+            if ($operation->value === $value) {
                 return $operation;
             }
         }

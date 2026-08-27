@@ -2,7 +2,11 @@
 
 namespace Xchert\PropertyAccess;
 
+use Xchert\PropertyAccess\Exception\InvalidInputException;
+use Xchert\PropertyAccess\Exception\InvalidPathException;
+use Xchert\PropertyAccess\Exception\OperationNotSupportedException;
 use Xchert\PropertyAccess\Exception\PropertyNotFoundException;
+use Xchert\Util\Exception\InvalidTypeException;
 use Xchert\Util\Type;
 
 class ArrayAccessor extends Accessor
@@ -16,12 +20,16 @@ class ArrayAccessor extends Accessor
         return \is_array($value);
     }
 
+    /**
+     * @throws PropertyNotFoundException
+     * @throws InvalidTypeException
+     */
     public function get(string $field, mixed $data, AccessContext $context): mixed
     {
         Type::validate($data, Type::ARRAY);
 
-        if(!\array_key_exists($field, $data)) {
-            if($context->hasFlags(Flags::STRICT)) {
+        if (!\array_key_exists($field, $data)) {
+            if ($context->hasFlags(Flags::STRICT)) {
                 throw new PropertyNotFoundException($context->getPath());
             }
 
@@ -31,6 +39,9 @@ class ArrayAccessor extends Accessor
         return $data[$field];
     }
 
+    /**
+     * @throws InvalidTypeException
+     */
     public function set(string $field, mixed &$data, mixed $value, AccessContext $context): void
     {
         Type::validate($data, Type::ARRAY);
@@ -38,6 +49,9 @@ class ArrayAccessor extends Accessor
         $data[$field] = $value;
     }
 
+    /**
+     * @throws InvalidTypeException
+     */
     public function push(mixed &$data, mixed $value, AccessContext $context): void
     {
         Type::validate($data, Type::ARRAY);
@@ -45,6 +59,9 @@ class ArrayAccessor extends Accessor
         $data[] = $value;
     }
 
+    /**
+     * @throws InvalidTypeException
+     */
     public function collect(mixed $data, AccessContext $context): array
     {
         Type::validate($data, Type::ARRAY);
@@ -52,6 +69,9 @@ class ArrayAccessor extends Accessor
         return $data;
     }
 
+    /**
+     * @throws InvalidTypeException
+     */
     public function has(string $field, mixed $data, AccessContext $context): bool
     {
         Type::validate($data, Type::ARRAY);
@@ -59,24 +79,32 @@ class ArrayAccessor extends Accessor
         return \array_key_exists($field, $data);
     }
 
+    /**
+     * @throws InvalidTypeException
+     * @throws InvalidPathException
+     * @throws InvalidInputException
+     * @throws PropertyNotFoundException
+     * @throws OperationNotSupportedException
+     * @throws \ReflectionException
+     */
     public function merge(mixed &$data, mixed $value, AccessContext $context): void
     {
         Type::validate($data, Type::ARRAY);
 
-        foreach(Util::valueToMerge($value) as $key => $valueToMerge) {
+        foreach (Util::valueToMerge($value) as $key => $valueToMerge) {
             $getContext = $context->subContext(Operation::Get, new Path([$key]));
             $getContext->removeFlag(Flags::STRICT);
 
-            $dataValue = $this->get((string) $key, $data, $getContext);
+            $dataValue = $this->get((string)$key, $data, $getContext);
 
-            if(Util::isMergeable($dataValue) && Util::isMergeable($valueToMerge)) {
+            if (Util::isMergeable($dataValue) && Util::isMergeable($valueToMerge)) {
                 $context->getPropertyAccessor()->write(new Path([]), $dataValue, $valueToMerge, $context->subContext(Operation::Merge, new Path([$key])));
                 $this->set($key, $data, $dataValue, $context);
 
                 continue;
             }
 
-            if(Util::isIndexField($key) && !$context->hasFlags(self::MERGE_OVERWRITE_NUMERIC)) {
+            if (Util::isIndexField($key) && !$context->hasFlags(self::MERGE_OVERWRITE_NUMERIC)) {
                 $this->push($data, $valueToMerge, $context);
             } else {
                 $this->set($key, $data, $valueToMerge, $context);

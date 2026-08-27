@@ -45,10 +45,11 @@ abstract class Accessor
      * @throws InvalidInputException
      * @throws OperationNotSupportedException
      * @throws PropertyNotFoundException
+     * @throws \ReflectionException
      */
     public function access(?string $field, mixed &$data, mixed $value, AccessContext $context): mixed
     {
-        switch($context->getOperation()) {
+        switch ($context->getOperation()) {
             case Operation::Get:
                 return $this->get($field, $data, $context);
 
@@ -78,22 +79,23 @@ abstract class Accessor
      * @throws InvalidInputException
      * @throws OperationNotSupportedException
      * @throws PropertyNotFoundException
+     * @throws \ReflectionException
      */
     public function merge(mixed &$data, mixed $value, AccessContext $context): void
     {
-        if(!$this->supports(Operation::Merge, $data)) {
+        if (!$this->supports(Operation::Merge, $data)) {
             throw new OperationNotSupportedException(Operation::Merge);
         }
 
         $propertyAccessor = $context->getPropertyAccessor();
 
-        foreach(Util::valueToMerge($value) as $key => $valueToMerge) {
+        foreach (Util::valueToMerge($value) as $key => $valueToMerge) {
             $getContext = $context->subContext(Operation::Get, new Path([$key]));
             $getContext->removeFlag(Flags::STRICT);
 
             $dataValue = $this->get($key, $data, $getContext);
 
-            if(Util::isMergeable($dataValue) && Util::isMergeable($valueToMerge)) {
+            if (Util::isMergeable($dataValue) && Util::isMergeable($valueToMerge)) {
                 $propertyAccessor->write(new Path([]), $dataValue, $valueToMerge, $context->subContext(Operation::Merge, new Path([$key])));
                 $this->set($key, $data, $dataValue, $context->subContext(Operation::Set, new Path([$key])));
 
