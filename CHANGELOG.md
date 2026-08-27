@@ -1,3 +1,14 @@
+# v1.0.1
+### New features
+
+* [#18 - Match code PSR-12 standards](https://github.com/x-chert/property-access/pull/18)
+
+### Other
+
+* [#17 - Exclude .github from archives](https://github.com/x-chert/property-access/pull/17)
+* [#19 - Use xchert bot for auto release workflow](https://github.com/x-chert/property-access/pull/19)
+
+
 # v1.0.0
 ### New features
 
