@@ -18,6 +18,7 @@ To use the `PropertyAccessor`, you need to register the appropriate accessors fo
 use Xchert\PropertyAccess\PropertyAccessor;
 use Xchert\PropertyAccess\ArrayAccessor;
 use Xchert\PropertyAccess\ObjectAccessor;
+use Xchert\PropertyAccess\CollectionAccessor;
 
 $propertyAccessor = new PropertyAccessor();
 
@@ -26,6 +27,10 @@ $propertyAccessor->registerAccessor(new ArrayAccessor(), ArrayAccessor::ID, 0);
 
 // Register ObjectAccessor for object support
 $propertyAccessor->registerAccessor(new ObjectAccessor(), ObjectAccessor::ID, 0);
+
+// Register CollectionAccessor for Xchert\Util\Pod\Collection support.
+// Collections are objects as well, so it needs a higher priority than the ObjectAccessor.
+$propertyAccessor->registerAccessor(new CollectionAccessor(), CollectionAccessor::ID, 10);
 ```
 
 ### Path Basics
