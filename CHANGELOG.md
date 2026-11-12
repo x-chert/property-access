@@ -1,3 +1,13 @@
+# v1.1.0
+### New features
+
+* [#20 - CollectionAccessor](https://github.com/x-chert/property-access/pull/20)
+
+### Other
+
+* [#21 - Restructure test suite](https://github.com/x-chert/property-access/pull/21)
+
+
 # v1.0.1
 ### New features
 
